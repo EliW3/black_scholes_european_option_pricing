@@ -4,7 +4,7 @@ This script calculates the theoretical price of European-style **Call and Put op
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 Ensure you have Python installed along with the required libraries. Install them via terminal:
@@ -29,7 +29,7 @@ black_scholes_model(
 
 ---
 
-## ⚙️ Function Parameters
+## Function Parameters
 
 | Parameter | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
@@ -42,7 +42,7 @@ black_scholes_model(
 
 ---
 
-## 🧠 How it Works
+## How it Works
 
 1. **Data Retrieval:** Downloads historical price data via the `yfinance` API using the `data_period` framework.
 2. **Volatility Estimation:** 
@@ -53,7 +53,7 @@ black_scholes_model(
 
 ---
 
-## ⚠️ Model Assumptions
+## Model Assumptions
 
 The Black-Scholes framework operates under specific idealized market conditions:
 * **No Dividends:** The underlying asset pays no dividends during the option's lifespan.
