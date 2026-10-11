@@ -1,0 +1,28 @@
+import numpy as np
+import yfinance as yf
+import pandas as pd
+import scipy.stats as si
+
+def black_scholes_model(stock_name="AAPL", time_until_expiration=0.25, strike_price=150, risk_free_rate=0.025, option_type="call", data_period=1):
+    data = yf.download(stock_name, period=f"{data_period}y", multi_level_index=False)
+    data_df = pd.DataFrame(data)
+    data_df["Price_Shifted"] = data_df["Adj Close"].shift(1)
+    data_df = data_df.dropna()
+    data_df["Log_returns"] = np.log(data_df["Adj Close"] / data_df["Price_Shifted"])
+    volatility = data_df["Log_returns"].std() * np.sqrt(252)
+    d1 = (np.log(data_df["Adj Close"].iloc[-1] / strike_price) + (risk_free_rate + volatility **2 / 2) * time_until_expiration) / (volatility * np.sqrt(time_until_expiration))
+    d2 = d1 - volatility * np.sqrt(time_until_expiration)
+    price = 0
+    if option_type.lower() == "call":
+        price = data_df["Adj Close"].iloc[-1] * si.norm.cdf(d1) - strike_price * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(d2)
+    elif option_type.lower() == "put":
+        price = strike_price * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(-d2) - data_df["Adj Close"].iloc[-1] * si.norm.cdf(-d1)
+    else:
+        raise ValueError("Invalid option type! Options: 'call' or 'put'")
+    print(f"Price: {price:.2f}")
+    print("Assuming the following:")
+    print("   No dividends are paid during the life of the option.")
+    print("   Market is random and can't be predicted.")
+    print("   No transaction costs or taxes.")
+    print("   Risk free rate and volatility are constants.")
+    print("   European option (can only be exercised at expiration).")
