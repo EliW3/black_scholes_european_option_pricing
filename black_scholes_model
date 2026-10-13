@@ -4,7 +4,7 @@ import pandas as pd
 import scipy.stats as si
 
 def black_scholes_model(stock_name="AAPL", time_until_expiration=0.25, strike_price=150, risk_free_rate=0.025, option_type="call", data_period=1):
-    data = yf.download(stock_name, period=f"{data_period}y", multi_level_index=False)
+    data = yf.download(stock_name, period=f"{data_period}y", multi_level_index=False, auto_adjust=False)
     data_df = pd.DataFrame(data)
     data_df["Price_Shifted"] = data_df["Adj Close"].shift(1)
     data_df = data_df.dropna()
@@ -15,11 +15,36 @@ def black_scholes_model(stock_name="AAPL", time_until_expiration=0.25, strike_pr
     price = 0
     if option_type.lower() == "call":
         price = data_df["Adj Close"].iloc[-1] * si.norm.cdf(d1) - strike_price * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(d2)
+        delta = si.norm.cdf(d1)
+        gamma = si.norm.pdf(d1) / (data_df["Adj Close"].iloc[-1] * volatility * np.sqrt(time_until_expiration))
+        vega = data_df["Adj Close"].iloc[-1] * si.norm.pdf(d1) * np.sqrt(time_until_expiration)
+        theta = - (data_df["Adj Close"].iloc[-1] * si.norm.pdf(d1) * volatility / 2 / np.sqrt(time_until_expiration) - risk_free_rate * strike_price * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(d2))
+        rho = strike_price * time_until_expiration * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(d2)
+        vanna = -si.norm.pdf(d1) * d2 / volatility
+        volga = data_df["Adj Close"].iloc[-1] * si.norm.pdf(d1) * np.sqrt(time_until_expiration) * d1 * d2 / volatility
+        charm = - si.norm.pdf(d1) * (2 * (risk_free_rate * time_until_expiration) - d2 * volatility * np.sqrt(time_until_expiration)) / (2 * time_until_expiration * volatility * np.sqrt(time_until_expiration))
     elif option_type.lower() == "put":
         price = strike_price * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(-d2) - data_df["Adj Close"].iloc[-1] * si.norm.cdf(-d1)
+        delta = si.norm.cdf(d1) - 1
+        gamma = si.norm.pdf(d1) / (data_df["Adj Close"].iloc[-1] * volatility * np.sqrt(time_until_expiration))
+        vega = data_df["Adj Close"].iloc[-1] * si.norm.pdf(d1) * np.sqrt(time_until_expiration)
+        theta = - (data_df["Adj Close"].iloc[-1] * si.norm.pdf(d1) * volatility / 2 / np.sqrt(time_until_expiration) + risk_free_rate * strike_price * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(-d2))
+        rho = - strike_price * time_until_expiration * np.exp(-risk_free_rate * time_until_expiration) * si.norm.cdf(-d2)
+        vanna = -si.norm.pdf(d1) * d2 / volatility
+        volga = data_df["Adj Close"].iloc[-1] * si.norm.pdf(d1) * np.sqrt(time_until_expiration) * d1 * d2 / volatility
+        charm = - si.norm.pdf(d1) * (2 * (risk_free_rate * time_until_expiration) - d2 * volatility * np.sqrt(time_until_expiration)) / (2 * time_until_expiration * volatility * np.sqrt(time_until_expiration))
     else:
         raise ValueError("Invalid option type! Options: 'call' or 'put'")
     print(f"Price: {price:.2f}")
+    print(f"Delta: {delta:.2f}")
+    print(f"Gamma: {gamma:.2f}")
+    print(f"Vega: {vega:.2f}")
+    print(f"Theta: {theta:.2f}")
+    print(f"Rho: {rho:.2f}")
+    print(f"Vanna: {vanna:.2f}")
+    print(f"Volga: {volga:.2f}")
+    print(f"Charm: {charm:.2f}")
+    print("--------------------------------")
     print("Assuming the following:")
     print("   No dividends are paid during the life of the option.")
     print("   Market is random and can't be predicted.")
